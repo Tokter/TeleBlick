@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.8.34330.188
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TeleBlick", "TeleBlick\TeleBlick.csproj", "{A5F31FCB-5D3D-4B42-9C8F-8AE94FE57B3A}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TeleBlick.Desktop", "TeleBlick.Desktop\TeleBlick.Desktop.csproj", "{40A45FF2-2B19-4675-BF77-0B193BCCE221}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A5F31FCB-5D3D-4B42-9C8F-8AE94FE57B3A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A5F31FCB-5D3D-4B42-9C8F-8AE94FE57B3A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A5F31FCB-5D3D-4B42-9C8F-8AE94FE57B3A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A5F31FCB-5D3D-4B42-9C8F-8AE94FE57B3A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{40A45FF2-2B19-4675-BF77-0B193BCCE221}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{40A45FF2-2B19-4675-BF77-0B193BCCE221}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{40A45FF2-2B19-4675-BF77-0B193BCCE221}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{40A45FF2-2B19-4675-BF77-0B193BCCE221}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {DD9686F7-D622-4C88-9043-2110A890F593}
+	EndGlobalSection
+EndGlobal
