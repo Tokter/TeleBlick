@@ -7,6 +7,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TeleBlick", "TeleBlick\Tele
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TeleBlick.Desktop", "TeleBlick.Desktop\TeleBlick.Desktop.csproj", "{40A45FF2-2B19-4675-BF77-0B193BCCE221}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TeleBlick.OpenTelemetry", "TeleBlick.OpenTelemetry\TeleBlick.OpenTelemetry.csproj", "{EA59AF90-0AAC-4224-B8D9-E70BAF7658F5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenTelemetryTest", "OpenTelemetryTest\OpenTelemetryTest.csproj", "{6AA13241-F4E1-40E4-8964-9DC8CDF43A8E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +25,14 @@ Global
 		{40A45FF2-2B19-4675-BF77-0B193BCCE221}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{40A45FF2-2B19-4675-BF77-0B193BCCE221}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{40A45FF2-2B19-4675-BF77-0B193BCCE221}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EA59AF90-0AAC-4224-B8D9-E70BAF7658F5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EA59AF90-0AAC-4224-B8D9-E70BAF7658F5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EA59AF90-0AAC-4224-B8D9-E70BAF7658F5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EA59AF90-0AAC-4224-B8D9-E70BAF7658F5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6AA13241-F4E1-40E4-8964-9DC8CDF43A8E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6AA13241-F4E1-40E4-8964-9DC8CDF43A8E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6AA13241-F4E1-40E4-8964-9DC8CDF43A8E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6AA13241-F4E1-40E4-8964-9DC8CDF43A8E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

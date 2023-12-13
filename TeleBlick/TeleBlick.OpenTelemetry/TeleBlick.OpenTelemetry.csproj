@@ -1,0 +1,40 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="Protos\common.proto" />
+    <None Remove="Protos\logs.proto" />
+    <None Remove="Protos\logs_service.proto" />
+    <None Remove="Protos\metrics.proto" />
+    <None Remove="Protos\metrics_service.proto" />
+    <None Remove="Protos\resource.proto" />
+    <None Remove="Protos\trace.proto" />
+    <None Remove="Protos\trace_service.proto" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Google.Protobuf" Version="3.25.1" />
+    <PackageReference Include="Grpc.Core" Version="2.46.6" />
+    <PackageReference Include="Grpc.Tools" Version="2.60.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Protobuf Include="Protos\common.proto" GrpcServices="Server" ProtoRoot="Protos\" />
+    <Protobuf Include="Protos\logs.proto" GrpcServices="Server" ProtoRoot="Protos\" />
+    <Protobuf Include="Protos\logs_service.proto" GrpcServices="Server" ProtoRoot="Protos\" />
+    <Protobuf Include="Protos\metrics.proto" GrpcServices="Server" ProtoRoot="Protos\" />
+    <Protobuf Include="Protos\metrics_service.proto" GrpcServices="Server" ProtoRoot="Protos\" />
+    <Protobuf Include="Protos\resource.proto" GrpcServices="Server" ProtoRoot="Protos\" />
+    <Protobuf Include="Protos\trace.proto" GrpcServices="Server" ProtoRoot="Protos\" />
+    <Protobuf Include="Protos\trace_service.proto" GrpcServices="Server" ProtoRoot="Protos\" />
+  </ItemGroup>
+
+</Project>
