@@ -10,7 +10,7 @@
         WindowStartupLocation="CenterScreen"
 		    ExtendClientAreaToDecorationsHint="True"
         ExtendClientAreaChromeHints="PreferSystemChrome"
-        Title="TeleBlick">
+        Title="TeleBlick" x:DataType="vm:MainViewModel">
 
   <Window.Resources>
     <StreamGeometry x:Key="Tools">
@@ -26,7 +26,7 @@
       <Panel />
     </DockPanel>
 
-    <views:MainView />
+    <TransitioningContentControl Content="{Binding CurrentPage}" />
 
   </DockPanel>
     

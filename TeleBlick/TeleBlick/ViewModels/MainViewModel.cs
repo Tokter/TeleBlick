@@ -1,4 +1,6 @@
-﻿using System;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.DependencyInjection;
+using System;
 using System.Collections.Generic;
 using TeleBlick.OpenTelemetry;
 
@@ -10,11 +12,12 @@ public partial class MainViewModel : ViewModelBase, IDisposable
 
     public IList<MenuViewModel>? MainMenu { get; set; }
 
-    public string Greeting => "Welcome to Avalonia!";
+    [ObservableProperty]
+    private ViewModelBase _currentPage = Ioc.Default.GetService<DashViewModel>()!;
 
     public MainViewModel()
     {
-        _server = new TelemetryServer();
+        _server = Ioc.Default.GetService<TelemetryServer>()!;
         _server.Start();
 
         //MainMenu = BuildMenuItems(PlaygroundCommandLocation.MainMenu).Items;

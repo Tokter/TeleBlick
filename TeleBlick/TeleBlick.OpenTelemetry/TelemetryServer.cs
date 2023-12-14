@@ -18,10 +18,9 @@ namespace TeleBlick.OpenTelemetry
         private readonly Server _server;
         private readonly TelemetryStorage _storage;
 
-        public TelemetryServer()
+        public TelemetryServer(TelemetryStorage storage)
         {
-            //Grpc.Core.GrpcEnvironment.SetLogger(new TestLogger());
-            _storage = new TelemetryStorage();
+            _storage = storage;
 
             _server = new Server
             {

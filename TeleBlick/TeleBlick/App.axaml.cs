@@ -1,7 +1,15 @@
 ﻿using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Data.Core.Plugins;
 using Avalonia.Markup.Xaml;
+using CommunityToolkit.Mvvm.DependencyInjection;
+using Grpc.Core;
+using Microsoft.Extensions.DependencyInjection;
+using System;
+using System.Linq;
+using System.Reflection;
+using TeleBlick.OpenTelemetry;
 using TeleBlick.ViewModels;
 using TeleBlick.Views;
 
@@ -20,21 +28,60 @@ public partial class App : Application
         // Without this line you will get duplicate validations from both Avalonia and CT
         BindingPlugins.DataValidators.RemoveAt(0);
 
+        SetupDependencyInjection();
+
+        var locator = new ViewLocator();
+        DataTemplates.Add(locator);
+
+        //var mainVM = Ioc.Default.GetService<MainViewModel>();
+        //var view = (Window)locator.Build(vm);
+        //view.DataContext = vm;
+
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             desktop.MainWindow = new MainWindow
             {
-                DataContext = new MainViewModel()
+                DataContext = Ioc.Default.GetService<MainViewModel>()
             };
         }
         else if (ApplicationLifetime is ISingleViewApplicationLifetime singleViewPlatform)
         {
-            singleViewPlatform.MainView = new MainView
-            {
-                DataContext = new MainViewModel()
-            };
+            throw new Exception("Not supported at this time");
         }
 
         base.OnFrameworkInitializationCompleted();
     }
+
+    private void SetupDependencyInjection()
+    {
+        var services = new ServiceCollection();
+        ConfigureViewModels(services);
+        ConfigureViews(services);
+        ConfigureTelemetry(services);
+        var provider = services.BuildServiceProvider();
+        Ioc.Default.ConfigureServices(provider);
+    }
+
+    private void ConfigureViewModels(IServiceCollection services)
+    {
+        foreach(var vm in Assembly.GetExecutingAssembly().GetTypes().Where(t => typeof(ViewModelBase).IsAssignableFrom(t)))
+        {
+            services.Add(new ServiceDescriptor(vm, vm, ServiceLifetime.Transient));
+        }
+    }
+
+    private void ConfigureViews(IServiceCollection services)
+    {
+        foreach (var vm in Assembly.GetExecutingAssembly().GetTypes().Where(t => typeof(UserControl).IsAssignableFrom(t)))
+        {
+            services.Add(new ServiceDescriptor(vm, vm.Name, ServiceLifetime.Transient));
+        }
+    }
+
+    private void ConfigureTelemetry(IServiceCollection services)
+    {
+        services.Add(new ServiceDescriptor(typeof(TelemetryStorage), typeof(TelemetryStorage), ServiceLifetime.Singleton));
+        services.Add(new ServiceDescriptor(typeof(TelemetryServer), typeof(TelemetryServer), ServiceLifetime.Singleton));
+    }
+
 }
