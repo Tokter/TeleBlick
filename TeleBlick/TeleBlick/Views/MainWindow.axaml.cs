@@ -1,4 +1,6 @@
 ﻿using Avalonia.Controls;
+using Avalonia.Controls.Chrome;
+using FluentAvalonia.UI.Windowing;
 using System;
 
 namespace TeleBlick.Views;
