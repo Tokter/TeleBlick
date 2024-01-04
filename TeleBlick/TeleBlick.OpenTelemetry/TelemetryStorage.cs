@@ -28,6 +28,30 @@ namespace TeleBlick.OpenTelemetry
             _traces = new(10000); // new(config.GetValue("MaxTraceCount", 10000));
         }
 
+        public TelemetryStorage(Stream stream) : this()
+        {
+            //Read the data from a stream
+            using var reader = new System.IO.BinaryReader(stream, Encoding.UTF8, true);
+
+            //Read the applications
+            var applicationCount = reader.ReadInt32();
+            for (var i = 0; i < applicationCount; i++)
+            {
+                var application = new Application(reader);
+                _applications.GetOrAdd(application.InstanceId, application);
+            }
+
+            //Read the traces
+            var traceCount = reader.ReadInt32();
+            for (var i = 0; i < traceCount; i++)
+            {
+                var trace = new Trace(this, reader);
+                _traces.Add(trace);
+            }
+
+            //Read the logs
+        }
+
         public Application GetOrAddApplication(Resource resource)
         {
             ArgumentNullException.ThrowIfNull(resource);
@@ -87,6 +111,27 @@ namespace TeleBlick.OpenTelemetry
 
         private readonly ReaderWriterLockSlim _tracesLock = new();
         private readonly Dictionary<string, Scope> _traceScopes = new();
+        
+        internal Scope GetScope(string scopeName)
+        {
+            if (string.IsNullOrEmpty(scopeName))
+            {
+                return Scope.Empty;
+            }
+
+            if (_traceScopes.TryGetValue(scopeName, out var scope))
+            {
+                return scope;
+            }
+
+            return Scope.Empty;
+        }
+
+        internal Application GetApplication(string applicationName)
+        {
+            return _applications[applicationName];
+        }
+
         private void AddTraces(AddContext context, Application application, RepeatedField<ScopeSpans> scopeSpans)
         {
             _tracesLock.EnterWriteLock();
@@ -235,28 +280,21 @@ namespace TeleBlick.OpenTelemetry
             var events = new List<SpanEvent>();
             foreach (var e in span.Events)
             {
-                events.Add(new SpanEvent()
-                {
-                    Name = e.Name,
-                    Time = e.TimeUnixNano.ToDateTime(),
-                    Attributes = e.Attributes.ToDictionary()
-                });
+                events.Add(new SpanEvent(e.Name, e.TimeUnixNano.ToDateTime(), e.Attributes.ToDictionary()));
             }
 
-            var newSpan = new ModelSpan(application, trace)
-            {
-                SpanId = id,
-                ParentSpanId = span.ParentSpanId?.ToHexString(),
-                Name = span.Name,
-                Kind = ConvertSpanKind(span.Kind),
-                StartTime = span.StartTimeUnixNano.ToDateTime(),
-                EndTime = span.EndTimeUnixNano.ToDateTime(),
-                Status = ConvertStatus(span.Status),
-                StatusMessage = span.Status?.Message,
-                Attributes = span.Attributes.ToDictionary(),
-                State = span.TraceState,
-                Events = events
-            };
+            var newSpan = new ModelSpan(application, trace,
+                spanId: id,
+                parentSpanId: span.ParentSpanId?.ToHexString(), 
+                name: span.Name, 
+                kind: ConvertSpanKind(span.Kind),
+                startTime: span.StartTimeUnixNano.ToDateTime(), 
+                endTime: span.EndTimeUnixNano.ToDateTime(), 
+                status: ConvertStatus(span.Status), 
+                statusMessage: span.Status?.Message,
+                state: span.TraceState,
+                attributes: span.Attributes.ToDictionary(),
+                events: events);
             return newSpan;
         }
 
@@ -285,6 +323,33 @@ namespace TeleBlick.OpenTelemetry
             };
         }
 
+        public void Write(Stream stream)
+        {
+            using var writer = new System.IO.BinaryWriter(stream, Encoding.UTF8, true);
+
+            //Write the applications
+            writer.Write(_applications.Count);
+            foreach (var application in _applications.Values)
+            {
+                application.Write(writer);
+            }
+
+            //Write the trace scopes
+            writer.Write(_traceScopes.Count);
+            foreach (var scope in _traceScopes.Values)
+            {
+                scope.Write(writer);
+            }
+
+            //Write the traces
+            writer.Write(_traces.Count);
+            foreach (var trace in _traces)
+            {
+                trace.Write(writer);
+            }
+
+            //Write the logs
+        }
     }
 
     public class AddContext

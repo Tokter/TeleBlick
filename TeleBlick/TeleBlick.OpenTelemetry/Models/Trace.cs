@@ -51,6 +51,34 @@ namespace TeleBlick.OpenTelemetry.Models
             FullName = string.Empty;
         }
 
+        public Trace(TelemetryStorage storage, BinaryReader reader)
+        {
+            TraceId = reader.ReadString();
+            Key = Convert.FromHexString(TraceId);
+            FullName = reader.ReadString();
+
+            if (reader.ReadBoolean())
+            {
+                var scopeName = reader.ReadString();
+                TraceScope = storage.GetScope(scopeName);
+            }
+            else
+            {
+                TraceScope = Scope.Empty;
+            }
+
+            var spanCount = reader.ReadInt32();
+            for (var i = 0; i < spanCount; i++)
+            {
+                var span = new Span(storage, this, reader);
+                Spans.Add(span);
+                if (string.IsNullOrEmpty(span.ParentSpanId))
+                {
+                    _rootSpan = span;
+                }
+            }
+        }
+
         public int CalculateDepth(Span span)
         {
             var depth = 0;
@@ -92,6 +120,27 @@ namespace TeleBlick.OpenTelemetry.Models
         private string DebuggerToString()
         {
             return $@"TraceId = ""{TraceId}"", Spans = {Spans.Count}, StartTime = {FirstSpan.StartTime.ToLocalTime():h:mm:ss.fff tt}, Duration = {Duration}";
+        }
+
+        internal void Write(BinaryWriter writer)
+        {
+            writer.Write(TraceId);
+            writer.Write(FullName);
+
+            if (TraceScope != null && TraceScope != Scope.Empty)
+            {
+                writer.Write(true);
+                writer.Write(TraceScope.ScopeName);
+            }
+            else
+            {
+                writer.Write(false);
+            }
+            writer.Write(Spans.Count);
+            foreach (var span in Spans)
+            {
+                span.Serialize(writer);
+            }
         }
     }
 }

@@ -62,6 +62,20 @@ namespace TeleBlick.OpenTelemetry.Models
             }
         }
 
+        public Application(BinaryReader reader)
+        {
+            ApplicationName = reader.ReadString();
+            InstanceId = reader.ReadString();
+
+            //Read the properties
+            var propertyCount = reader.ReadInt32();
+            for (var i = 0; i < propertyCount; i++)
+            {
+                Properties.Add(reader.ReadString(), reader.ReadString());
+            }
+        }
+
+
         public void AddMetrics(AddContext context, RepeatedField<ScopeMetrics> scopeMetrics)
         {
             _metricsLock.EnterWriteLock();
@@ -102,6 +116,43 @@ namespace TeleBlick.OpenTelemetry.Models
             finally
             {
                 _metricsLock.ExitWriteLock();
+            }
+        }
+
+        public void Write(BinaryWriter writer)
+        {
+            try
+            {
+                _metricsLock.EnterReadLock();
+
+                writer.Write(ApplicationName);
+                writer.Write(InstanceId);
+
+                //Write the properties
+                writer.Write(Properties.Count);
+                foreach (var property in Properties)
+                {
+                    writer.Write(property.Key);
+                    writer.Write(property.Value);
+                }
+
+                ////Write the meters
+                //writer.Write(_meters.Count);
+                //foreach (var meter in _meters.Values)
+                //{
+                //    meter.Serialize(writer);
+                //}
+
+                ////Write the instruments
+                //writer.Write(_instruments.Count);
+                //foreach (var instrument in _instruments.Values)
+                //{
+                //    instrument.Serialize(writer);
+                //}
+            }
+            finally
+            {
+                _metricsLock.ExitReadLock();
             }
         }
 

@@ -39,5 +39,17 @@ namespace TeleBlick.OpenTelemetry.Models
             Version = scope.Version;
             Properties = scope.Attributes.ToDictionary();
         }
+
+        internal void Write(BinaryWriter writer)
+        {
+            writer.Write(ScopeName);
+            writer.Write(Version);
+            writer.Write(Properties.Count);
+            foreach (var property in Properties)
+            {
+                writer.Write(property.Key);
+                writer.Write(property.Value);
+            }
+        }
     }
 }

@@ -79,17 +79,17 @@ namespace TeleBlick.OpenTelemetry.Models
         public Trace Trace { get; }
         public Application Source { get; }
 
-        public required string SpanId { get; init; }
-        public required string? ParentSpanId { get; init; }
-        public required string Name { get; init; }
-        public required SpanKind Kind { get; init; }
-        public required DateTime StartTime { get; init; }
-        public required DateTime EndTime { get; init; }
-        public required SpanStatus Status { get; init; }
-        public required string? StatusMessage { get; init; }
-        public required string? State { get; init; }
-        public required Dictionary<string,string> Attributes { get; init; }
-        public required List<SpanEvent> Events { get; init; }
+        public string SpanId { get; private set; }
+        public string? ParentSpanId { get; private set; }
+        public string Name { get; private set; }
+        public SpanKind Kind { get; private set; }
+        public DateTime StartTime { get; private set; }
+        public DateTime EndTime { get; private set; }
+        public SpanStatus Status { get; private set; }
+        public string? StatusMessage { get; private set; }
+        public string? State { get; private set; }
+        public Dictionary<string,string> Attributes { get; private set; }
+        public List<SpanEvent> Events { get; private set; }
 
         public string ScopeName => Trace.TraceScope.ScopeName;
         public string ScopeSource => Source.ApplicationName;
@@ -98,15 +98,111 @@ namespace TeleBlick.OpenTelemetry.Models
         public IEnumerable<Span> GetChildSpans() => Trace.Spans.Where(s => s.ParentSpanId == SpanId);
         public Span? GetParentSpan() => string.IsNullOrEmpty(ParentSpanId) ? null : Trace.Spans.Where(s => s.SpanId == ParentSpanId).FirstOrDefault();
 
-        public Span(Application application, Trace trace)
+        public Span(Application application, Trace trace, string spanId, string? parentSpanId, string name, SpanKind kind, DateTime startTime, DateTime endTime, SpanStatus status, string? statusMessage, string? state, Dictionary<string, string> attributes, List<SpanEvent> events)
         {
             Source = application;
             Trace = trace;
+            SpanId = spanId;
+            ParentSpanId = parentSpanId;
+            Name = name;
+            Kind = kind;
+            StartTime = startTime;
+            EndTime = endTime;
+            Status = status;
+            StatusMessage = statusMessage;
+            State = state;
+            Attributes = attributes;
+            Events = events;
+        }
+
+        public Span(TelemetryStorage storage, Trace trace, BinaryReader reader)
+        {
+            Source = storage.GetApplication(reader.ReadString());
+            Trace = trace;
+            SpanId = reader.ReadString();
+            if (reader.ReadBoolean())
+            {
+                ParentSpanId = reader.ReadString();
+            }
+            Name = reader.ReadString();
+            Kind = (SpanKind)reader.ReadInt32();
+            StartTime = DateTime.FromBinary(reader.ReadInt64());
+            EndTime = DateTime.FromBinary(reader.ReadInt64());
+            Status = (SpanStatus)reader.ReadInt32();
+            if (reader.ReadBoolean())
+            {
+                StatusMessage = reader.ReadString();
+            }
+            if (reader.ReadBoolean())
+            {
+                State = reader.ReadString();
+            }
+            var attributeCount = reader.ReadInt32();
+            Attributes = new Dictionary<string, string>(attributeCount);
+            for (var i = 0; i < attributeCount; i++)
+            {
+                Attributes.Add(reader.ReadString(), reader.ReadString());
+            }
+            var eventCount = reader.ReadInt32();
+            Events = new List<SpanEvent>(eventCount);
+            for (var i = 0; i < eventCount; i++)
+            {
+                Events.Add(new SpanEvent(reader));
+            }
         }
 
         private string DebuggerToString()
         {
             return $@"SpanId = {SpanId}, StartTime = {StartTime.ToLocalTime():h:mm:ss.fff tt}, ParentSpanId = {ParentSpanId}, TraceId = {Trace.TraceId}";
+        }
+
+        internal void Serialize(BinaryWriter writer)
+        {
+            writer.Write(Source.ApplicationName);
+            writer.Write(SpanId);
+            if (ParentSpanId != null)
+            {
+                writer.Write(true);
+                writer.Write(ParentSpanId);
+            }
+            else
+            {
+                writer.Write(false);
+            }
+            writer.Write(Name);
+            writer.Write((int)Kind);
+            writer.Write(StartTime.ToBinary());
+            writer.Write(EndTime.ToBinary());
+            writer.Write((int)Status);
+            if (StatusMessage != null)
+            {
+                writer.Write(true);
+                writer.Write(StatusMessage);
+            }
+            else
+            {
+                writer.Write(false);
+            }
+            if (State != null)
+            {
+                writer.Write(true);
+                writer.Write(State);
+            }
+            else
+            {
+                writer.Write(false);
+            }
+            writer.Write(Attributes.Count);
+            foreach (var attribute in Attributes)
+            {
+                writer.Write(attribute.Key);
+                writer.Write(attribute.Value);
+            }
+            writer.Write(Events.Count);
+            foreach (var spanEvent in Events)
+            {
+                spanEvent.Write(writer);
+            }
         }
     }
 }

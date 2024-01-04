@@ -25,8 +25,13 @@
 
   <Grid RowDefinitions="Auto, *">
     <Border Grid.Row="0" Height="32">
-      <TextBlock Text="{Binding Title, RelativeSource={RelativeSource FindAncestor, AncestorType=Window }}"
-                 VerticalAlignment="Center" Margin="10 0"/>
+      <StackPanel Orientation="Horizontal">
+        <TextBlock FontWeight="Bold" Text="{Binding Title, RelativeSource={RelativeSource FindAncestor, AncestorType=Window }}" VerticalAlignment="Center" Margin="10 0"/>
+        <Menu>
+          <MenuItem Header="File" Icon="{StaticResource Tools}" />
+        </Menu>
+      </StackPanel>
+
     </Border>
     <SplitView Grid.Row="1"
                IsPaneOpen="{Binding IsPaneOpen}"

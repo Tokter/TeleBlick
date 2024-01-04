@@ -21,6 +21,7 @@ namespace TeleBlick.OpenTelemetry.Services
         public override Task<ExportMetricsServiceResponse> Export(ExportMetricsServiceRequest request, ServerCallContext context)
         {
             var addContext = new AddContext();
+
             _storage.AddMetrics(addContext, request.ResourceMetrics);
 
             return Task.FromResult(new ExportMetricsServiceResponse
