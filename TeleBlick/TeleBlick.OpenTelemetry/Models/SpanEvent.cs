@@ -15,6 +15,10 @@ namespace TeleBlick.OpenTelemetry.Models
             Attributes = attributes;
         }
 
+        /// <summary>
+        /// Constructor for deserialization
+        /// </summary>
+        /// <param name="reader"></param>
         public SpanEvent(BinaryReader reader)
         {
             Name = reader.ReadString();

@@ -51,6 +51,11 @@ namespace TeleBlick.OpenTelemetry.Models
             FullName = string.Empty;
         }
 
+        /// <summary>
+        /// Constructor for deserialization
+        /// </summary>
+        /// <param name="storage"></param>
+        /// <param name="reader"></param>
         public Trace(TelemetryStorage storage, BinaryReader reader)
         {
             TraceId = reader.ReadString();
