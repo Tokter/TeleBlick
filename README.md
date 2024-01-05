@@ -1,2 +1,4 @@
+[![.NET](https://github.com/Tokter/TeleBlick/actions/workflows/UnitTests.yml/badge.svg)](https://github.com/Tokter/TeleBlick/actions/workflows/UnitTests.yml)
+
 # TeleBlick
-A parallel OpenTelemetry visualizer for applications in development, displaying OpenTelemetry events.
+A OpenTelemetry trace and metrics observability tool, written in C# and Avalonia.
