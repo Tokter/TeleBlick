@@ -52,6 +52,25 @@ namespace TeleBlick.OpenTelemetry
             //Read the logs
         }
 
+        #region Applications
+
+        public Application? GetApplication(string applicationName)
+        {
+            _applications.TryGetValue(applicationName, out var application);
+            return application;
+        }
+
+        public List<Application> GetApplications()
+        {
+            var applications = new List<Application>();
+            foreach (var kvp in _applications)
+            {
+                applications.Add(kvp.Value);
+            }
+            applications.Sort((a, b) => string.Compare(a.ApplicationName, b.ApplicationName, StringComparison.OrdinalIgnoreCase));
+            return applications;
+        }
+
         public Application GetOrAddApplication(Resource resource)
         {
             ArgumentNullException.ThrowIfNull(resource);
@@ -70,6 +89,8 @@ namespace TeleBlick.OpenTelemetry
 
             return _applications.GetOrAdd(serviceInstanceId, _ => { return new Application(resource); });
         }
+
+        #endregion
 
         public void AddMetrics(AddContext context, RepeatedField<ResourceMetrics> resourceMetrics)
         {
@@ -125,11 +146,6 @@ namespace TeleBlick.OpenTelemetry
             }
 
             return Scope.Empty;
-        }
-
-        internal Application GetApplication(string applicationName)
-        {
-            return _applications[applicationName];
         }
 
         private void AddTraces(AddContext context, Application application, RepeatedField<ScopeSpans> scopeSpans)
