@@ -1,4 +1,5 @@
 ﻿using Avalonia;
+using Avalonia.Collections;
 using Avalonia.Controls;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -26,6 +27,8 @@ public partial class MainViewModel : ViewModelBase, IDisposable
     [ObservableProperty]
     private ListItemTemplate? _selectedListItem;
 
+    public AvaloniaList<SearchItem> SearchTerms { get; } = new AvaloniaList<SearchItem>();
+
     public MainViewModel()
     {
         _server = Ioc.Default.GetService<TelemetryServer>()!;
@@ -33,6 +36,10 @@ public partial class MainViewModel : ViewModelBase, IDisposable
 
         //MainMenu = BuildMenuItems(PlaygroundCommandLocation.MainMenu).Items;
         SelectedListItem = Items[0];
+
+        SearchTerms.Add(new SearchItem("Server Startup", "Traces"));
+        SearchTerms.Add(new SearchItem("CMDServer", "Applications"));
+        SearchTerms.Add(new SearchItem("CMDWorker", "Applications"));
     }
 
     partial void OnSelectedListItemChanged(ListItemTemplate? value)
@@ -77,4 +84,17 @@ public class ListItemTemplate
     public string Label { get; }
     public Type ModelType { get; }
     public StreamGeometry ListItemIcon { get; }
+}
+
+public class SearchItem
+{
+    public SearchItem(string searchText, string searchGroup)
+    {
+        SearchText = searchText;
+        SearchGroup = searchGroup;
+    }
+
+    public string SearchText { get; set; }
+
+    public string SearchGroup { get; set; }
 }

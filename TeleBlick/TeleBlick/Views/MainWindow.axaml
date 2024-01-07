@@ -5,6 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:views="clr-namespace:TeleBlick.Views"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        Width="800" Height="600"
         x:Class="TeleBlick.Views.MainWindow"
         Icon="/Assets/avalonia-logo.ico"
         WindowStartupLocation="CenterScreen"
@@ -23,14 +24,61 @@
     </StreamGeometry>
   </Window.Resources>
 
+  <Window.Styles>
+    <Style Selector="AutoCompleteBox.SearchBox /template/ TextBox#PART_TextBox">
+      <Setter Property="InnerRightContent">
+        <Template>
+          <StackPanel Orientation="Horizontal">
+            <Button Content="&#xE8BB;"
+                       FontFamily="{StaticResource SymbolThemeFontFamily}"
+                       Theme="{StaticResource TransparentButton}"
+                       Command="{Binding $parent[TextBox].Clear}"
+                       IsVisible="{Binding Text, RelativeSource={RelativeSource FindAncestor, AncestorType=TextBox}, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+            <Button Content="&#xE721;"
+                       FontFamily="{StaticResource SymbolThemeFontFamily}"
+                       Theme="{StaticResource TransparentButton}"
+                       Command="{Binding $parent[TextBox].Clear}"
+                       IsHitTestVisible="False"/>
+          </StackPanel>
+        </Template>
+      </Setter>
+    </Style>
+  </Window.Styles>
+
   <Grid RowDefinitions="Auto, *">
-    <Border Grid.Row="0" Height="32">
-      <StackPanel Orientation="Horizontal">
-        <TextBlock FontWeight="Bold" Text="{Binding Title, RelativeSource={RelativeSource FindAncestor, AncestorType=Window }}" VerticalAlignment="Center" Margin="10 0"/>
-        <Menu>
+    <Border Grid.Row="0">
+
+      <Grid ColumnDefinitions="80,20*,20*,20*">
+        <TextBlock Grid.Column="0" FontWeight="Bold" Text="{Binding Title, RelativeSource={RelativeSource FindAncestor, AncestorType=Window }}" VerticalAlignment="Center" Margin="10 0"/>
+
+        <Menu Grid.Column="1" HorizontalAlignment="Left">
           <MenuItem Header="File" Icon="{StaticResource Tools}" />
         </Menu>
-      </StackPanel>
+
+        <AutoCompleteBox Grid.Column="2" Name="SearchBox"
+                 MinWidth="100"
+                 MaxWidth="500"
+                 Watermark="Search"
+                 Classes="SearchBox"
+                 VerticalAlignment="Center"
+                 ValueMemberBinding="{Binding SearchText, DataType=vm:SearchItem}"
+                 ItemsSource="{Binding SearchTerms}">
+          <AutoCompleteBox.ItemTemplate>
+            <DataTemplate x:DataType="vm:SearchItem">
+              <Panel>
+                <StackPanel HorizontalAlignment="Left"
+                            VerticalAlignment="Center">
+                  <TextBlock Text="{Binding SearchText}" />
+                  <TextBlock Text="{Binding SearchGroup}"
+                             Theme="{StaticResource CaptionTextBlockStyle}"
+                             Foreground="{DynamicResource AccentTextFillColorPrimaryBrush}"
+                             FontStyle="Italic"/>
+                </StackPanel>
+              </Panel>
+            </DataTemplate>
+          </AutoCompleteBox.ItemTemplate>
+        </AutoCompleteBox>
+      </Grid>
 
     </Border>
     <SplitView Grid.Row="1"
@@ -73,7 +121,7 @@
       <SplitView.Content>
         <Border CornerRadius="12 0 0 0"
                 Background="#2d2d2d">
-          <TransitioningContentControl Content="{Binding CurrentPage}" />
+          <TransitioningContentControl Content="{Binding CurrentPage}" Margin="8" />
         </Border>
       </SplitView.Content>
     </SplitView>
