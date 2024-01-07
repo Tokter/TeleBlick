@@ -21,5 +21,33 @@ namespace TeleBlick.OpenTelemetry.Models
             Version = scope.Version;
             Properties = scope.Attributes.ToDictionary();
         }
+
+        public Meter(BinaryReader reader)
+        {
+            MeterName = reader.ReadString();
+            Version = reader.ReadString();
+
+            //Read the properties
+            var count = reader.ReadInt32();
+            Properties = new Dictionary<string, string>(count);
+            for (var i = 0; i < count; i++)
+            {
+                Properties.Add(reader.ReadString(), reader.ReadString());
+            }
+        }
+
+        internal void Write(BinaryWriter writer)
+        {
+            writer.Write(MeterName);
+            writer.Write(Version);
+
+            //Write the properties
+            writer.Write(Properties.Count);
+            foreach (var property in Properties)
+            {
+                writer.Write(property.Key);
+                writer.Write(property.Value);
+            }
+        }
     }
 }

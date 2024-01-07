@@ -30,14 +30,59 @@ namespace TeleBlick.OpenTelemetry.Models
     [DebuggerDisplay("Name = {Name}, Unit = {Unit}, Type = {Type}")]
     public class Instrument
     {
-        public required string Name { get; init; }
-        public required string Description { get; init; }
-        public required string Unit { get; init; }
-        public required InstrumentKind Type { get; init; }
-        public required Meter Parent { get; init; }
+        public string Name { get; init; }
+        public string Description { get; init; }
+        public string Unit { get; init; }
+        public InstrumentKind Type { get; init; }
+        public Meter Parent { get; init; }
 
         public Dictionary<ReadOnlyMemory<KeyValuePair<string, string>>, DimensionScope> Dimensions { get; } = new(ScopeAttributesComparer.Instance);
         public Dictionary<string, List<string>> KnownAttributeValues { get; } = new();
+
+        public Instrument(string name, string description, string unit, InstrumentKind type, Meter parent)
+        {
+            Name = name;
+            Description = description;
+            Unit = unit;
+            Type = type;
+            Parent = parent;
+        }
+
+        public Instrument(BinaryReader reader, Func<string,Meter> meterLookup)
+        {
+            Name = reader.ReadString();
+            Description = reader.ReadString();
+            Unit = reader.ReadString();
+            Type = (InstrumentKind)reader.ReadInt32();
+            Parent = meterLookup(reader.ReadString());
+
+            //Read the known attribute values
+            var count = reader.ReadInt32();
+            for (var i = 0; i < count; i++)
+            {
+                var key = reader.ReadString();
+                var valueCount = reader.ReadInt32();
+                var values = new List<string>(valueCount);
+                for (var j = 0; j < valueCount; j++)
+                {
+                    values.Add(reader.ReadString());
+                }
+                KnownAttributeValues.Add(key, values);
+            }
+
+            //Read the dimensions
+            count = reader.ReadInt32();
+            for (var i = 0; i < count; i++)
+            {
+                var attributeCount = reader.ReadInt32();
+                var attributes = new KeyValuePair<string, string>[attributeCount];
+                for (var j = 0; j < attributeCount; j++)
+                {
+                    attributes[j] = new KeyValuePair<string, string>(reader.ReadString(), reader.ReadString());
+                }
+                Dimensions.Add(attributes, new DimensionScope(reader));
+            }
+        }
 
         public void AddMetrics(Metric metric, ref KeyValuePair<string, string>[]? tempAttributes)
         {
@@ -75,7 +120,7 @@ namespace TeleBlick.OpenTelemetry.Models
 
         public InstrumentKey GetKey() => new(Parent.MeterName, Name);
 
-        private DimensionScope FindScope(RepeatedField<KeyValue> attributes, ref KeyValuePair<string, string>[]? tempAttributes)
+        public DimensionScope FindScope(RepeatedField<KeyValue> attributes, ref KeyValuePair<string, string>[]? tempAttributes)
         {
             // We want to find the dimension scope that matches the attributes, but we don't want to allocate.
             // Copy values to a temporary reusable array.
@@ -124,6 +169,59 @@ namespace TeleBlick.OpenTelemetry.Models
                 {
                     values.Add(value);
                 }
+            }
+        }
+
+        public static Instrument Clone(Instrument instrument, bool cloneData, DateTime? valuesStart, DateTime? valuesEnd)
+        {
+            var newInstrument = new Instrument(instrument.Name, instrument.Description, instrument.Unit, instrument.Type, instrument.Parent);
+
+            if (cloneData)
+            {
+                foreach (var item in instrument.KnownAttributeValues)
+                {
+                    newInstrument.KnownAttributeValues.Add(item.Key, item.Value.ToList());
+                }
+                foreach (var item in instrument.Dimensions)
+                {
+                    newInstrument.Dimensions.Add(item.Key, DimensionScope.Clone(item.Value, valuesStart, valuesEnd));
+                }
+            }
+
+            return newInstrument;
+        }
+
+        internal void Write(BinaryWriter writer)
+        {
+            writer.Write(Name);
+            writer.Write(Description);
+            writer.Write(Unit);
+            writer.Write((int)Type);
+            writer.Write(Parent.MeterName);
+
+            //Write the known attribute values
+            writer.Write(KnownAttributeValues.Count);
+            foreach (var knownAttribute in KnownAttributeValues)
+            {
+                writer.Write(knownAttribute.Key);
+                writer.Write(knownAttribute.Value.Count);
+                foreach (var value in knownAttribute.Value)
+                {
+                    writer.Write(value);
+                }
+            }
+
+            //Write the dimensions
+            writer.Write(Dimensions.Count);
+            foreach (var dimension in Dimensions)
+            {
+                writer.Write(dimension.Key.Length);
+                foreach (var attribute in dimension.Key.Span)
+                {
+                    writer.Write(attribute.Key);
+                    writer.Write(attribute.Value);
+                }
+                dimension.Value.Write(writer);
             }
         }
 

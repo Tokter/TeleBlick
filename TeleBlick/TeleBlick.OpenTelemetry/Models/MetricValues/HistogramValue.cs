@@ -37,5 +37,10 @@ namespace TeleBlick.OpenTelemetry.Models.MetricValues
             }
             return sb.ToString();
         }
+
+        protected override MetricValueBase Clone()
+        {
+            return new HistogramValue(Values, Sum, Count, Start, End, ExplicitBounds);
+        }
     }
 }

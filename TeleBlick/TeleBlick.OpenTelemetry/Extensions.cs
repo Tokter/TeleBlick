@@ -76,6 +76,13 @@ namespace TeleBlick.OpenTelemetry
             return UnixEpoch.AddTicks((long)(unixTimeNanoSeconds / 100));
         }
 
+        public static ulong ToUnixNanoseconds(this DateTime dateTime)
+        {
+            var timeSinceEpoch = dateTime.ToUniversalTime() - UnixEpoch;
+
+            return (ulong)timeSinceEpoch.Ticks * 100;
+        }
+
         public static string ConcatProperties(this KeyValuePair<string, string>[] properties)
         {
             StringBuilder sb = new();

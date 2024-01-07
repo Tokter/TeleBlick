@@ -16,5 +16,10 @@ namespace TeleBlick.OpenTelemetry.Models.MetricValues
         }
 
         public override string? ToString() => Value.ToString();
+
+        protected override MetricValueBase Clone()
+        {
+            return new MetricValue<T>(Value, Start, End);
+        }
     }
 }

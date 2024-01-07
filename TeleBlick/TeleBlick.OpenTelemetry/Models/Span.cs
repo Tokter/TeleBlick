@@ -156,7 +156,7 @@ namespace TeleBlick.OpenTelemetry.Models
             return $@"SpanId = {SpanId}, StartTime = {StartTime.ToLocalTime():h:mm:ss.fff tt}, ParentSpanId = {ParentSpanId}, TraceId = {Trace.TraceId}";
         }
 
-        internal void Serialize(BinaryWriter writer)
+        internal void Write(BinaryWriter writer)
         {
             writer.Write(Source.ApplicationName);
             writer.Write(SpanId);

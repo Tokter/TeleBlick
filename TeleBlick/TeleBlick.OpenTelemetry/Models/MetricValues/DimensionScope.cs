@@ -25,6 +25,55 @@ namespace TeleBlick.OpenTelemetry.Models.MetricValues
             Name = name != null && name.Length > 0 ? name : "no-dimensions";
         }
 
+        public DimensionScope(BinaryReader reader)
+        {
+            Name = reader.ReadString();
+
+            //Read the attributes
+            var count = reader.ReadInt32();
+            Attributes = new KeyValuePair<string, string>[count];
+            for (var i = 0; i < count; i++)
+            {
+                Attributes[i] = new KeyValuePair<string, string>(reader.ReadString(), reader.ReadString());
+            }
+
+            //Read the values
+            count = reader.ReadInt32();
+            Values = new List<MetricValueBase>(count);
+            for (var i = 0; i < count; i++)
+            {
+                var type = reader.ReadInt32();
+                switch (type)
+                {
+                    case 1:
+                        Values.Add(new MetricValue<long>(reader.ReadInt64(), reader.ReadUInt64().ToDateTime(), reader.ReadUInt64().ToDateTime()));
+                        break;
+                    case 2:
+                        Values.Add(new MetricValue<double>(reader.ReadDouble(), reader.ReadUInt64().ToDateTime(), reader.ReadUInt64().ToDateTime()));
+                        break;
+                    case 3:
+                        var sum = reader.ReadDouble();
+                        var count2 = reader.ReadUInt64();
+                        var start = reader.ReadUInt64().ToDateTime();
+                        var end = reader.ReadUInt64().ToDateTime();
+                        var explicitBounds = new double[reader.ReadInt32()];
+                        for (var j = 0; j < explicitBounds.Length; j++)
+                        {
+                            explicitBounds[j] = reader.ReadDouble();
+                        }
+                        var values = new ulong[reader.ReadInt32()];
+                        for (var j = 0; j < values.Length; j++)
+                        {
+                            values[j] = reader.ReadUInt64();
+                        }
+                        Values.Add(new HistogramValue(values, sum, count2, start, end, explicitBounds));
+                        break;
+                    default:
+                        throw new Exception($"Unknown metric value type {type}!");
+                }
+            }
+        }
+
         /// <summary>
         /// Compares and updates the timespan for metrics if they are unchanged.
         /// </summary>
@@ -103,5 +152,87 @@ namespace TeleBlick.OpenTelemetry.Models.MetricValues
             }
         }
 
+        internal static DimensionScope Clone(DimensionScope value, DateTime? valuesStart, DateTime? valuesEnd)
+        {
+            var newDimensionScope = new DimensionScope(value.Attributes);
+            if (valuesStart != null && valuesEnd != null)
+            {
+                foreach (var item in value.Values)
+                {
+                    if ((item.Start <= valuesEnd.Value && item.End >= valuesStart.Value) ||
+                        (item.Start >= valuesStart.Value && item.End <= valuesEnd.Value))
+                    {
+                        newDimensionScope.Values.Add(MetricValueBase.Clone(item));
+                    }
+                }
+            }
+            else
+            {
+                foreach (var item in value.Values)
+                {
+                    newDimensionScope.Values.Add(MetricValueBase.Clone(item));
+                }
+            }
+
+
+            return newDimensionScope;
+        }
+
+        internal void Write(BinaryWriter writer)
+        {
+            writer.Write(Name);
+
+            //Write the attributes
+            writer.Write(Attributes.Length);
+            foreach (var attribute in Attributes)
+            {
+                writer.Write(attribute.Key);
+                writer.Write(attribute.Value);
+            }
+
+            //Write the values
+            writer.Write(Values.Count);
+            foreach (var value in Values)
+            {
+                if (value is MetricValue<long> longValue)
+                {
+                    writer.Write(1);
+                    writer.Write(longValue.Value);
+                    writer.Write(longValue.Count);
+                    writer.Write(longValue.Start.ToUnixNanoseconds());
+                    writer.Write(longValue.End.ToUnixNanoseconds());
+                }
+                else if (value is MetricValue<double> doubleValue)
+                {
+                    writer.Write(2);
+                    writer.Write(doubleValue.Value);
+                    writer.Write(doubleValue.Count);
+                    writer.Write(doubleValue.Start.ToUnixNanoseconds());
+                    writer.Write(doubleValue.End.ToUnixNanoseconds());
+                }
+                else if (value is HistogramValue histogramValue)
+                {
+                    writer.Write(3);
+                    writer.Write(histogramValue.Sum);
+                    writer.Write(histogramValue.Count);
+                    writer.Write(histogramValue.Start.ToUnixNanoseconds());
+                    writer.Write(histogramValue.End.ToUnixNanoseconds());
+                    writer.Write(histogramValue.ExplicitBounds.Length);
+                    foreach (var bound in histogramValue.ExplicitBounds)
+                    {
+                        writer.Write(bound);
+                    }
+                    writer.Write(histogramValue.Values.Length);
+                    foreach (var bucket in histogramValue.Values)
+                    {
+                        writer.Write(bucket);
+                    }
+                }
+                else
+                {
+                    throw new Exception($"Unknown metric value type {value.GetType().Name}!");
+                }
+            }
+        }
     }
 }

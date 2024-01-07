@@ -73,6 +73,22 @@ namespace TeleBlick.OpenTelemetry.Models
             {
                 Properties.Add(reader.ReadString(), reader.ReadString());
             }
+
+            //Read the meters
+            var meterCount = reader.ReadInt32();
+            for (var i = 0; i < meterCount; i++)
+            {
+                var meter = new Meter(reader);
+                _meters.Add(meter.MeterName, meter);
+            }
+
+            //Read the instruments
+            var instrumentCount = reader.ReadInt32();
+            for (var i = 0; i < instrumentCount; i++)
+            {
+                var instrumentKey = new InstrumentKey(reader.ReadString(), reader.ReadString());
+                _instruments.Add(instrumentKey, new Instrument(reader, (string key) => _meters[key]));
+            }
         }
 
 
@@ -94,14 +110,7 @@ namespace TeleBlick.OpenTelemetry.Models
                             var instrumentKey = new InstrumentKey(sm.Scope.Name, metric.Name);
                             if (!_instruments.TryGetValue(instrumentKey, out var instrument))
                             {
-                                _instruments.Add(instrumentKey, instrument = new Instrument
-                                {
-                                    Name = metric.Name,
-                                    Description = metric.Description,
-                                    Unit = metric.Unit,
-                                    Type = MapMetricType(metric.DataCase),
-                                    Parent = GetMeter(sm.Scope)
-                                });
+                                _instruments.Add(instrumentKey, instrument = new Instrument(metric.Name, metric.Description, metric.Unit, MapMetricType(metric.DataCase), GetMeter(sm.Scope)));
                             }
 
                             instrument.AddMetrics(metric, ref tempAttributes);
@@ -116,6 +125,56 @@ namespace TeleBlick.OpenTelemetry.Models
             finally
             {
                 _metricsLock.ExitWriteLock();
+            }
+        }
+
+        /// <summary>
+        /// Returns the specified instrument, with the meter values.
+        /// </summary>
+        /// <param name="meterName"></param>
+        /// <param name="instrumentName"></param>
+        /// <param name="valuesStart"></param>
+        /// <param name="valuesEnd"></param>
+        /// <returns></returns>
+        public Instrument? GetInstrument(string meterName, string instrumentName, DateTime? valuesStart, DateTime? valuesEnd)
+        {
+            _metricsLock.EnterReadLock();
+
+            try
+            {
+                if (!_instruments.TryGetValue(new InstrumentKey(meterName, instrumentName), out var instrument))
+                {
+                    return null;
+                }
+
+                return Instrument.Clone(instrument, cloneData: true, valuesStart: valuesStart, valuesEnd: valuesEnd);
+            }
+            finally
+            {
+                _metricsLock.ExitReadLock();
+            }
+        }
+
+        /// <summary>
+        /// Returns a list of instruments, but without the meter values.
+        /// </summary>
+        /// <returns>A list of instruments.</returns>
+        public List<Instrument> GetInstrumentsSummary()
+        {
+            _metricsLock.EnterReadLock();
+
+            try
+            {
+                var instruments = new List<Instrument>(_instruments.Count);
+                foreach (var instrument in _instruments)
+                {
+                    instruments.Add(Instrument.Clone(instrument.Value, cloneData: false, valuesStart: null, valuesEnd: null));
+                }
+                return instruments;
+            }
+            finally
+            {
+                _metricsLock.ExitReadLock();
             }
         }
 
@@ -136,19 +195,22 @@ namespace TeleBlick.OpenTelemetry.Models
                     writer.Write(property.Value);
                 }
 
-                ////Write the meters
-                //writer.Write(_meters.Count);
-                //foreach (var meter in _meters.Values)
-                //{
-                //    meter.Serialize(writer);
-                //}
+                //Write the meters
+                writer.Write(_meters.Count);
+                foreach (var meter in _meters.Values)
+                {
+                    meter.Write(writer);
+                }
 
-                ////Write the instruments
-                //writer.Write(_instruments.Count);
-                //foreach (var instrument in _instruments.Values)
-                //{
-                //    instrument.Serialize(writer);
-                //}
+                //Write the instruments
+                writer.Write(_instruments.Count);
+                foreach (var instrumentKey in _instruments.Keys)
+                {
+                    writer.Write(instrumentKey.MeterName);
+                    writer.Write(instrumentKey.InstrumentName);
+                    var instrument = _instruments[instrumentKey];
+                    instrument.Write(writer);
+                }
             }
             finally
             {

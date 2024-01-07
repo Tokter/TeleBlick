@@ -144,7 +144,7 @@ namespace TeleBlick.OpenTelemetry.Models
             writer.Write(Spans.Count);
             foreach (var span in Spans)
             {
-                span.Serialize(writer);
+                span.Write(writer);
             }
         }
     }
