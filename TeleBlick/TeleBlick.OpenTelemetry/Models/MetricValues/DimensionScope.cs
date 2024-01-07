@@ -46,16 +46,16 @@ namespace TeleBlick.OpenTelemetry.Models.MetricValues
                 switch (type)
                 {
                     case 1:
-                        Values.Add(new MetricValue<long>(reader.ReadInt64(), reader.ReadUInt64().ToDateTime(), reader.ReadUInt64().ToDateTime()));
+                        Values.Add(new MetricValue<long>(reader.ReadInt64(), DateTime.FromBinary(reader.ReadInt64()), DateTime.FromBinary(reader.ReadInt64())));
                         break;
                     case 2:
-                        Values.Add(new MetricValue<double>(reader.ReadDouble(), reader.ReadUInt64().ToDateTime(), reader.ReadUInt64().ToDateTime()));
+                        Values.Add(new MetricValue<double>(reader.ReadDouble(), DateTime.FromBinary(reader.ReadInt64()), DateTime.FromBinary(reader.ReadInt64())));
                         break;
                     case 3:
                         var sum = reader.ReadDouble();
                         var count2 = reader.ReadUInt64();
-                        var start = reader.ReadUInt64().ToDateTime();
-                        var end = reader.ReadUInt64().ToDateTime();
+                        var start = DateTime.FromBinary(reader.ReadInt64());
+                        var end = DateTime.FromBinary(reader.ReadInt64());
                         var explicitBounds = new double[reader.ReadInt32()];
                         for (var j = 0; j < explicitBounds.Length; j++)
                         {
@@ -199,24 +199,24 @@ namespace TeleBlick.OpenTelemetry.Models.MetricValues
                     writer.Write(1);
                     writer.Write(longValue.Value);
                     writer.Write(longValue.Count);
-                    writer.Write(longValue.Start.ToUnixNanoseconds());
-                    writer.Write(longValue.End.ToUnixNanoseconds());
+                    writer.Write(longValue.Start.ToBinary());
+                    writer.Write(longValue.End.ToBinary());
                 }
                 else if (value is MetricValue<double> doubleValue)
                 {
                     writer.Write(2);
                     writer.Write(doubleValue.Value);
                     writer.Write(doubleValue.Count);
-                    writer.Write(doubleValue.Start.ToUnixNanoseconds());
-                    writer.Write(doubleValue.End.ToUnixNanoseconds());
+                    writer.Write(doubleValue.Start.ToBinary());
+                    writer.Write(doubleValue.End.ToBinary());
                 }
                 else if (value is HistogramValue histogramValue)
                 {
                     writer.Write(3);
                     writer.Write(histogramValue.Sum);
                     writer.Write(histogramValue.Count);
-                    writer.Write(histogramValue.Start.ToUnixNanoseconds());
-                    writer.Write(histogramValue.End.ToUnixNanoseconds());
+                    writer.Write(histogramValue.Start.ToBinary());
+                    writer.Write(histogramValue.End.ToBinary());
                     writer.Write(histogramValue.ExplicitBounds.Length);
                     foreach (var bound in histogramValue.ExplicitBounds)
                     {

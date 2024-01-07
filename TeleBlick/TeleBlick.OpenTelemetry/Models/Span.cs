@@ -117,7 +117,7 @@ namespace TeleBlick.OpenTelemetry.Models
 
         public Span(TelemetryStorage storage, Trace trace, BinaryReader reader)
         {
-            Source = storage.GetApplication(reader.ReadString());
+            Source = storage.GetApplication(reader.ReadString())!;
             Trace = trace;
             SpanId = reader.ReadString();
             if (reader.ReadBoolean())
