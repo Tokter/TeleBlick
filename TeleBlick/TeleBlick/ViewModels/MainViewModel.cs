@@ -34,7 +34,7 @@ public partial class MainViewModel : ViewModelBase, IDisposable
         _server = Ioc.Default.GetService<TelemetryServer>()!;
         _server.Start();
 
-        //MainMenu = BuildMenuItems(PlaygroundCommandLocation.MainMenu).Items;
+        MainMenu = MenuViewModel.Build(TeleBlickCommandLocation.MainMenu, this).Items;
         SelectedListItem = Items[0];
 
         SearchTerms.Add(new SearchItem("Server Startup", "Traces"));

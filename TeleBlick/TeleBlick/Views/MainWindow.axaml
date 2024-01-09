@@ -25,6 +25,17 @@
   </Window.Resources>
 
   <Window.Styles>
+    <Style Selector="MenuItem"  x:DataType="vm:MenuViewModel">
+      <Setter Property="Header" Value="{Binding Name}"/>
+      <Setter Property="ItemsSource" Value="{Binding Items}"/>
+      <Setter Property="Command" Value="{Binding Command}"/>
+      <Setter Property="Icon">
+        <Template>
+          <PathIcon Data="{Binding Icon}" Width="14" Height="14" />
+        </Template>
+      </Setter>
+    </Style>
+    
     <Style Selector="AutoCompleteBox.SearchBox /template/ TextBox#PART_TextBox">
       <Setter Property="InnerRightContent">
         <Template>
@@ -43,6 +54,7 @@
         </Template>
       </Setter>
     </Style>
+
   </Window.Styles>
 
   <Grid RowDefinitions="Auto, *">
@@ -51,9 +63,7 @@
       <Grid ColumnDefinitions="80,20*,20*,20*">
         <TextBlock Grid.Column="0" FontWeight="Bold" Text="{Binding Title, RelativeSource={RelativeSource FindAncestor, AncestorType=Window }}" VerticalAlignment="Center" Margin="10 0"/>
 
-        <Menu Grid.Column="1" HorizontalAlignment="Left">
-          <MenuItem Header="File" Icon="{StaticResource Tools}" />
-        </Menu>
+        <Menu Grid.Column="1" HorizontalAlignment="Left" ItemsSource="{Binding MainMenu}" />
 
         <AutoCompleteBox Grid.Column="2" Name="SearchBox"
                  MinWidth="100"

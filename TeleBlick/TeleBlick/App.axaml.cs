@@ -39,10 +39,12 @@ public partial class App : Application
 
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
+            var main = Ioc.Default.GetService<MainViewModel>();
             desktop.MainWindow = new MainWindow
             {
-                DataContext = Ioc.Default.GetService<MainViewModel>()
+                DataContext = main
             };
+            if (main != null) main.View = desktop.MainWindow;
         }
         else if (ApplicationLifetime is ISingleViewApplicationLifetime singleViewPlatform)
         {
@@ -56,7 +58,7 @@ public partial class App : Application
     {
         var services = new ServiceCollection();
         ConfigureViewModels(services);
-        ConfigureViews(services);
+        ConfigureCommands(services);
         ConfigureTelemetry(services);
         var provider = services.BuildServiceProvider();
         Ioc.Default.ConfigureServices(provider);
@@ -70,11 +72,11 @@ public partial class App : Application
         }
     }
 
-    private void ConfigureViews(IServiceCollection services)
+    private void ConfigureCommands(IServiceCollection services)
     {
-        foreach (var vm in Assembly.GetExecutingAssembly().GetTypes().Where(t => typeof(UserControl).IsAssignableFrom(t)))
+        foreach (var vm in Assembly.GetExecutingAssembly().GetTypes().Where(t => typeof(TeleBlickCommand).IsAssignableFrom(t)))
         {
-            services.Add(new ServiceDescriptor(vm, vm.Name, ServiceLifetime.Transient));
+            services.Add(new ServiceDescriptor(vm, vm, ServiceLifetime.Transient));
         }
     }
 
